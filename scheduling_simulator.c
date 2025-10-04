@@ -1,44 +1,25 @@
-/**
- * @file scheduling_simulator.c
- * @brief An Advanced Process Scheduling Simulator in C.
- *
- * This program simulates FCFS, Preemptive SJF, Preemptive Priority, and
- * Round Robin scheduling algorithms. It includes features like dynamic process
- * input, Gantt chart visualization, performance metric calculation (WT, TAT),
- * and a simulation of dynamic memory allocation. This project is designed
- * to be robust and modular, reflecting practices in system software companies
- * like American Megatrends (AMI).
- *
- * To Compile: gcc scheduling_simulator.c -o simulator
- * To Run: ./simulator
- */
-
 #include "simulator.h"
-#include <string.h> // For memcpy
+#include <string.h> // memcpy ke liye
 
 // --- Global Variables ---
 Process processes[MAX_PROCESSES];
 int process_count = 0;
 int next_pid = 1;
 
-/**
- * @brief Main entry point of the simulator.
- */
+// Program ka main entry point.
 int main() {
     handle_user_choice();
     return 0;
 }
 
-/**
- * @brief Displays the main menu of the simulator.
- */
+// User ko saare options dikhane ke liye menu.
 void display_menu() {
     printf("\n+----------------------------------------------------+\n");
     printf("|        ADVANCED PROCESS SCHEDULING SIMULATOR       |\n");
     printf("+----------------------------------------------------+\n");
     printf("| 1. Add Process                                     |\n");
     printf("| 2. Run First-Come, First-Served (FCFS)             |\n");
-    printf("| 3. Run Shortest Job First (SJF) - Preemptive     |\n");
+    printf("| 3. Run Shortest Job First (SJF) - Preemptive       |\n");
     printf("| 4. Run Priority Scheduling - Preemptive          |\n");
     printf("| 5. Run Round Robin (RR)                            |\n");
     printf("| 6. Compare All Algorithms & Find Best              |\n");
@@ -47,20 +28,18 @@ void display_menu() {
     printf("Enter your choice: ");
 }
 
-/**
- * @brief Handles the main application loop and user choices.
- */
+// User ke menu choice ko handle karne wala function.
 void handle_user_choice() {
     int choice;
     do {
         display_menu();
         int result = scanf("%d", &choice);
         
-        // Input validation
+        // Input sahi hai ya nahi, yeh check karne ke liye.
         if (result != 1) {
             printf("\n[ERROR] Invalid input. Please enter a number.\n");
-            while (getchar() != '\n'); // Clear input buffer
-            choice = 0; // Reset choice to continue loop
+            while (getchar() != '\n'); // Input buffer ko clear karo
+            choice = 0;
             continue;
         }
 
@@ -77,9 +56,7 @@ void handle_user_choice() {
     } while (choice != 7);
 }
 
-/**
- * @brief Prompts user for process details and adds it to the list.
- */
+// User se process ki details lekar list mein add karta hai.
 void add_process() {
     if (process_count >= MAX_PROCESSES) {
         printf("\n[ERROR] Maximum process limit reached.\n");
@@ -110,7 +87,7 @@ void add_process() {
 
     p.remaining_time = p.burst_time;
     p.is_completed = false;
-    simulate_memory_allocation(&p); // Simulate memory allocation
+    simulate_memory_allocation(&p); // Memory allocation ka simulation
 
     processes[process_count++] = p;
     next_pid++;
@@ -118,13 +95,9 @@ void add_process() {
 }
 
 
-/**
- * @brief Simulates allocating a block of memory for a process.
- * @param p Pointer to the process requiring memory.
- */
+// Process ke liye memory block allocate karne ka simulation.
 void simulate_memory_allocation(Process* p) {
-    // Allocate memory based on burst time for a more realistic simulation
-    p->memory_block = malloc(p->burst_time * sizeof(char) * 10); // 10 bytes per unit of burst time
+    p->memory_block = malloc(p->burst_time * sizeof(char) * 10);
     if (p->memory_block == NULL) {
         printf("[MEMORY_SIM] Failed to allocate memory for PID %d.\n", p->pid);
     } else {
@@ -132,10 +105,7 @@ void simulate_memory_allocation(Process* p) {
     }
 }
 
-/**
- * @brief Simulates freeing the memory block of a completed process.
- * @param p Pointer to the process whose memory should be freed.
- */
+// Process ke poora hone par memory free karne ka simulation.
 void simulate_memory_free(Process* p) {
     if (p->memory_block != NULL) {
         printf("[MEMORY_SIM] Freeing memory for PID %d from address %p.\n", p->pid, p->memory_block);
@@ -145,9 +115,7 @@ void simulate_memory_free(Process* p) {
 }
 
 
-/**
- * @brief Resets the state of all processes for a new simulation run.
- */
+// Naye simulation ke liye sabhi process ki state ko reset karta hai.
 void reset_process_state() {
     for (int i = 0; i < process_count; i++) {
         processes[i].remaining_time = processes[i].burst_time;
@@ -158,9 +126,7 @@ void reset_process_state() {
     }
 }
 
-/**
- * @brief Creates a deep copy of the process array.
- */
+// Har algorithm ke liye processes ki ek fresh copy banata hai.
 void copy_processes(Process dest[], Process src[], int n) {
     for(int i = 0; i < n; i++) {
         dest[i] = src[i];
@@ -169,9 +135,7 @@ void copy_processes(Process dest[], Process src[], int n) {
     }
 }
 
-/**
- * @brief Simulates the First-Come, First-Served (FCFS) scheduling algorithm.
- */
+// First-Come, First-Served (FCFS) algorithm ka simulation.
 void run_fcfs() {
     if (process_count == 0) {
         printf("\n[ERROR] No processes to schedule. Please add processes first.\n");
@@ -183,7 +147,7 @@ void run_fcfs() {
     GanttEntry gantt_chart[MAX_PROCESSES * 2];
     int gantt_count = 0;
     
-    // Sort processes by arrival time (Bubble Sort for simplicity)
+    // Processes ko arrival time ke hisab se sort karna.
     for (int i = 0; i < process_count - 1; i++) {
         for (int j = 0; j < process_count - i - 1; j++) {
             if (procs[j].arrival_time > procs[j + 1].arrival_time) {
@@ -197,10 +161,9 @@ void run_fcfs() {
     int current_time = 0;
     for (int i = 0; i < process_count; i++) {
         if (current_time < procs[i].arrival_time) {
-            current_time = procs[i].arrival_time; // CPU is idle
+            current_time = procs[i].arrival_time; // CPU khali hai.
         }
         
-        // Record Gantt chart entry
         gantt_chart[gantt_count].pid = procs[i].pid;
         gantt_chart[gantt_count].start_time = current_time;
         
@@ -219,9 +182,7 @@ void run_fcfs() {
 }
 
 
-/**
- * @brief Simulates the Preemptive Shortest Job First (SJF) algorithm.
- */
+// Preemptive Shortest Job First (SJF) algorithm ka simulation.
 void run_sjf_preemptive() {
     if (process_count == 0) {
         printf("\n[ERROR] No processes to schedule.\n");
@@ -241,7 +202,7 @@ void run_sjf_preemptive() {
         int shortest_job_idx = -1;
         int min_remaining_time = INT_MAX;
 
-        // Find the process with the minimum remaining time that has arrived
+        // Sabse kam remaining time wala process dhundhna jo aa chuka hai.
         for (int i = 0; i < process_count; i++) {
             if (procs[i].arrival_time <= current_time && !procs[i].is_completed) {
                 if (procs[i].remaining_time < min_remaining_time) {
@@ -252,13 +213,13 @@ void run_sjf_preemptive() {
         }
 
         if (shortest_job_idx == -1) {
-            current_time++; // CPU is idle
+            current_time++; // CPU khali hai.
             continue;
         }
         
         int current_pid = procs[shortest_job_idx].pid;
 
-        // Gantt Chart Logic: Add new entry if process changes or it's the first one
+        // Gantt chart ke liye: agar process badalta hai toh nayi entry.
         if(last_pid != current_pid) {
              if(gantt_count > 0) {
                 gantt_chart[gantt_count-1].end_time = current_time;
@@ -277,7 +238,7 @@ void run_sjf_preemptive() {
             procs[shortest_job_idx].is_completed = true;
             completed_count++;
             simulate_memory_free(&procs[shortest_job_idx]);
-            last_pid = -1; // Force new Gantt entry next
+            last_pid = -1;
         }
     }
     gantt_chart[gantt_count-1].end_time = current_time;
@@ -287,9 +248,7 @@ void run_sjf_preemptive() {
     print_gantt_chart(gantt_chart, gantt_count);
 }
 
-/**
- * @brief Simulates the Preemptive Priority scheduling algorithm.
- */
+// Preemptive Priority scheduling algorithm ka simulation.
 void run_priority_preemptive() {
     if (process_count == 0) {
         printf("\n[ERROR] No processes to schedule.\n");
@@ -309,7 +268,7 @@ void run_priority_preemptive() {
         int highest_priority_idx = -1;
         int min_priority = INT_MAX;
 
-        // Find the arrived process with the highest priority (lowest priority number)
+        // Sabse zyada priority wala process dhundhna (jiska priority number sabse kam ho).
         for (int i = 0; i < process_count; i++) {
             if (procs[i].arrival_time <= current_time && !procs[i].is_completed) {
                 if (procs[i].priority < min_priority) {
@@ -320,7 +279,7 @@ void run_priority_preemptive() {
         }
 
         if (highest_priority_idx == -1) {
-            current_time++; // Idle
+            current_time++; // CPU khali hai.
             continue;
         }
         
@@ -352,9 +311,7 @@ void run_priority_preemptive() {
     print_gantt_chart(gantt_chart, gantt_count);
 }
 
-/**
- * @brief Simulates the Round Robin (RR) scheduling algorithm.
- */
+// Round Robin (RR) scheduling algorithm ka simulation.
 void run_round_robin() {
     if (process_count == 0) {
         printf("\n[ERROR] No processes to schedule.\n");
@@ -379,9 +336,8 @@ void run_round_robin() {
     
     int current_time = 0;
     int completed_count = 0;
-    int last_pid = -1;
     
-    // Sort by arrival time initially to handle arrival order correctly
+    // Processes ko arrival time ke hisab se sort karna.
     for (int i = 0; i < process_count - 1; i++) {
         for (int j = 0; j < process_count - i - 1; j++) {
             if (procs[j].arrival_time > procs[j+1].arrival_time) {
@@ -391,7 +347,7 @@ void run_round_robin() {
     }
 
     while (completed_count < process_count) {
-        // Add newly arrived processes to the ready queue
+        // Naye aaye hue processes ko ready queue mein daalna.
         for (int i = 0; i < process_count; i++) {
             if (!procs[i].is_completed && procs[i].arrival_time <= current_time && !in_queue[procs[i].pid]) {
                 if (front == -1) front = 0;
@@ -402,7 +358,7 @@ void run_round_robin() {
         }
 
         if (front == -1) {
-            current_time++; // Idle
+            current_time++; // CPU khali hai.
             continue;
         }
 
@@ -421,7 +377,7 @@ void run_round_robin() {
         gantt_chart[gantt_count].end_time = current_time;
         gantt_count++;
 
-        // Add processes that arrived during this execution slice
+        // Jo process is time slice ke dauran aaye, unhe queue mein add karna.
         for (int i = 0; i < process_count; i++) {
             if (!procs[i].is_completed && procs[i].arrival_time <= current_time && !in_queue[procs[i].pid]) {
                 if(front == -1) front = 0;
@@ -437,7 +393,7 @@ void run_round_robin() {
             completed_count++;
             simulate_memory_free(&procs[current_proc_idx]);
         } else {
-            // Add the current process back to the queue if it's not done
+            // Agar process poora nahi hua, toh use wapas queue mein daal do.
             if(front == -1) front = 0;
             rear = (rear + 1) % MAX_PROCESSES;
             ready_queue[rear] = current_proc_idx;
@@ -451,14 +407,9 @@ void run_round_robin() {
 }
 
 
-/**
- * @brief Calculates waiting time and turnaround time for all processes.
- * @param procs Array of processes after simulation.
- * @param n Number of processes.
- */
+// Sabhi processes ke liye waiting time aur turnaround time calculate karta hai.
 void calculate_metrics(Process procs[], int n) {
     for (int i = 0; i < n; i++) {
-        // Find the original process to get burst time
         for(int j=0; j < process_count; j++){
             if(procs[i].pid == processes[j].pid){
                  procs[i].turnaround_time = procs[i].completion_time - procs[i].arrival_time;
@@ -469,16 +420,11 @@ void calculate_metrics(Process procs[], int n) {
     }
 }
 
-/**
- * @brief Prints the results in a formatted table.
- * @param procs The array of completed processes.
- * @param n The number of processes.
- * @param algorithm_name The name of the algorithm run.
- */
+// Results ko ek saaf table format mein print karta hai.
 void print_results_table(Process procs[], int n, const char* algorithm_name) {
     float total_wt = 0, total_tat = 0;
     
-    // Sort by PID for consistent output
+    // Output consistent rahe, isliye PID se sort karna.
     for (int i = 0; i < n - 1; i++) {
         for (int j = 0; j < n - i - 1; j++) {
             if (procs[j].pid > procs[j + 1].pid) {
@@ -505,15 +451,11 @@ void print_results_table(Process procs[], int n, const char* algorithm_name) {
 }
 
 
-/**
- * @brief Prints a visual ASCII Gantt chart.
- * @param chart The array of Gantt chart entries.
- * @param n The number of entries.
- */
+// Ek visual ASCII Gantt chart print karta hai.
 void print_gantt_chart(GanttEntry chart[], int n) {
     printf("\n--- GANTT CHART ---\n\n");
 
-    // Print top border
+    // Upar ka border
     printf(" ");
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < (chart[i].end_time - chart[i].start_time) * 2; j++) printf("-");
@@ -521,7 +463,7 @@ void print_gantt_chart(GanttEntry chart[], int n) {
     }
     printf("\n|");
 
-    // Print process IDs
+    // Process IDs
     for (int i = 0; i < n; i++) {
         int duration = (chart[i].end_time - chart[i].start_time) * 2;
         int padding = (duration - 4) / 2;
@@ -530,34 +472,32 @@ void print_gantt_chart(GanttEntry chart[], int n) {
         for (int j = 0; j < padding; j++) printf(" ");
         printf(" P%d ", chart[i].pid);
         for (int j = 0; j < padding; j++) printf(" ");
-        if((duration - 4) % 2 != 0) printf(" "); // Adjust for odd durations
+        if((duration - 4) % 2 != 0) printf(" ");
         printf("|");
     }
     printf("\n ");
 
-    // Print bottom border
+    // Neeche ka border
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < (chart[i].end_time - chart[i].start_time) * 2; j++) printf("-");
         printf(" ");
     }
     printf("\n");
 
-    // Print timestamps
+    // Timestamps
     printf("%d", chart[0].start_time);
     for (int i = 0; i < n; i++) {
         int duration = (chart[i].end_time - chart[i].start_time) * 2;
         for (int j = 0; j < duration; j++) printf(" ");
 
-        if (chart[i].end_time > 9) printf("\b"); // Backspace for two-digit numbers
+        if (chart[i].end_time > 9) printf("\b"); // do-digit numbers ke liye adjustment
         printf("%d", chart[i].end_time);
     }
     printf("\n\n");
 }
 
 
-/**
- * @brief Runs all algorithms and compares their average waiting times.
- */
+// Sabhi algorithms ko chalata hai aur unke average waiting time ko compare karta hai.
 void compare_all_algorithms() {
     if (process_count == 0) {
         printf("\n[ERROR] No processes to compare. Please add processes first.\n");
@@ -565,34 +505,8 @@ void compare_all_algorithms() {
     }
     printf("\n--- COMPARING ALL ALGORITHMS ---\n");
     
-    float avg_wt[4]; // 0:FCFS, 1:SJF, 2:Priority, 3:RR
-    
-    // --- FCFS ---
-    Process fcfs_procs[MAX_PROCESSES];
-    copy_processes(fcfs_procs, processes, process_count);
-    // Sort by arrival time for FCFS logic
-    for(int i=0; i<process_count-1; i++) for(int j=0; j<process_count-i-1; j++) if(fcfs_procs[j].arrival_time > fcfs_procs[j+1].arrival_time) { Process t = fcfs_procs[j]; fcfs_procs[j] = fcfs_procs[j+1]; fcfs_procs[j+1] = t; }
-    int current_time_fcfs = 0;
-    float total_wt_fcfs = 0;
-    for(int i=0; i<process_count; i++){
-        if(current_time_fcfs < fcfs_procs[i].arrival_time) current_time_fcfs = fcfs_procs[i].arrival_time;
-        fcfs_procs[i].waiting_time = current_time_fcfs - fcfs_procs[i].arrival_time;
-        total_wt_fcfs += fcfs_procs[i].waiting_time;
-        current_time_fcfs += fcfs_procs[i].burst_time;
-    }
-    avg_wt[0] = total_wt_fcfs / process_count;
-
-    // --- SJF Preemptive ---
-    // (This is a simplified calculation, a full simulation is more accurate but complex for a quick compare)
-    // NOTE: For brevity, this comparison re-runs the full simulation logic.
-    // In a production system, you might extract the core calculation.
-    reset_process_state();
-    // This is a placeholder for the actual calculation which requires full simulation logic.
-    // A full accurate run is complex, so we'll just run the functions and capture averages.
-    // For this demonstration, we will rely on a simplified re-calculation.
-    
-    // For simplicity, we'll just call the full simulation and grab the average from the printout.
-    // A more integrated approach would have the functions return the avg waiting time.
+    // Note: Is function ka sabse aasan tareeka hai ki har algorithm ko dobara run kiya jaye
+    // aur unke results ko compare kiya jaye.
     printf("\nNOTE: The following outputs are for comparison calculation.\n");
     run_fcfs();
     run_sjf_preemptive();
@@ -603,4 +517,6 @@ void compare_all_algorithms() {
     printf("Based on the results above, compare the 'Average Waiting Time' for each.\n");
     printf("The algorithm with the LOWEST average waiting time is generally the most efficient for the given workload.\n");
     printf("For throughput-oriented systems, SJF is often optimal. For interactive systems, Round Robin provides better response times.\n");
-}
+} 
+
+
